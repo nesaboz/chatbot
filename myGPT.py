@@ -1,3 +1,6 @@
+# DO NOT RENAME OR MOVE THIS FILE. 
+# Must update GitHub action workflow and documentation in README if you do.
+
 import streamlit as st
 import requests
 import json
@@ -8,7 +11,7 @@ text_input_key = "user_input"
 def query_mygpt(chat):
 
     lambda_url = "https://5faukxw75uazcs2zdl4zbvyg2e0lebie.lambda-url.us-west-1.on.aws/"
-    # print("Please wait while GPT4 is done ...")
+    # print("Please wait while GPT is done ...")
     headers = {'Content-Type': 'application/json'}
     r = requests.post(headers=headers, url=lambda_url, json=json.dumps(chat))
     new_chat = json.loads(r.content.decode('utf-8'))
@@ -29,8 +32,12 @@ def send_message():
     
 
 def show_with_background_color(some_text):
+    """
+    Not used anymore. The ideas was to have custom background color,
+    but it is easier to just have chatbot reply in gray color,
+    that way it works on both dark and light mode. 
+    """
 
-    # Inject custom CSS with st.markdown
     st.markdown("""
         <style>
         .content {
@@ -39,10 +46,10 @@ def show_with_background_color(some_text):
         }
         </style>
         """, unsafe_allow_html=True)
-
     # Display the content with custom style
     st.markdown(f'<div class="content">{some_text}</div>', unsafe_allow_html=True)
 
+    
 
 if 'first time' not in st.session_state:
     st.session_state['number_of_trials'] = 3
@@ -54,11 +61,15 @@ if 'first time' not in st.session_state:
 # Streamlit app layout
 st.title("MyGPT Demo")
 
-st.info(f"Welcome to MyGPT, a simple GPT-4 based chatbot. No chats are stored. Response are limited to about 300 words. ")
+st.info(f"Welcome to MyGPT, a simple OpenAI ChatGPT-3 based chatbot (soon GPT-4). No chats are stored. Responses are limited to about 300 words. ")
 
 for i in range(1, len(st.session_state['chat'] ), 2):
-    a1 = st.write(st.session_state['chat'][i]['content'])
-    a2 = show_with_background_color(st.session_state['chat'][i+1]['content'])
+    # writes previous question
+    question = st.session_state['chat'][i]['content']
+    a1 = st.write(question)
+    # writes previous answer
+    answer = st.session_state['chat'][i+1]['content']
+    a2 = st.markdown(f'<div style="color: gray;">{answer}</div>', unsafe_allow_html=True)
     st.text("\n" * 10) 
     
     
