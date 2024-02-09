@@ -127,24 +127,8 @@ st.title("MyGPT Demo")
 
 st.info(f"Welcome to MyGPT, a simple OpenAI ChatGPT-3 based chatbot (for now).\nNo chats are stored. Responses are limited to about 300 words. ")
 
-"debug", st.session_state['chat']
-"error", st.session_state['error']
-
-# if no_errors(st.session_state['chat']):
-#     # show all previous Q&A
-#     show_previous_q_and_a(st.session_state['chat'])
-#     # show a new input prompt and a send button
-#     show_input_prompt_and_send_button()
-# else: # there was some error so show the previous Q&A and the same question again
-#     # show n-1 previous Q&A
-#     show_previous_q_and_a(st.session_state['chat'], offset=2)
-    
-#     # show the same question again and a send button
-#     previous_question = st.session_state['chat'][-1]['content']
-#     show_input_prompt_and_send_button(previous_question)
-#     # show an extra field saying it failed so the user should retry
-    
-#     st.error(f"Try again, there was some issue with API (it happens sometimes)")  
+# "debug", st.session_state['chat']
+# "error", st.session_state['error']
 
 # show all previous Q&A 
 show_previous_q_and_a(st.session_state['chat'])
