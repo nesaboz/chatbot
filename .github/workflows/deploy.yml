@@ -1,0 +1,29 @@
+name: Execute SSM SendCommand
+
+on: 
+  push:
+    branches:
+      - main
+
+jobs:
+  ssm-command:
+    runs-on: ubuntu-latest
+    environment: AWS
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-1  # Or your desired AWS region
+
+    - name: Send SSM Command
+      run: |
+        aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=instanceids,Values=i-08b8b6691ed2e1b6d" \
+            --parameters commands="date > /home/ubuntu/output.log && sudo -u ubuntu git -C /home/ubuntu/blog pull >> /home/ubuntu/output.log 2>&1 && sudo pkill -f streamlit >> /home/ubuntu/output.log 2>&1 && nohup /home/ubuntu/miniconda/bin/streamlit run /home/ubuntu/blog/nbs/projects/myGPT/myGPT.py --server.enableCORS false --server.enableXsrfProtection false >> /home/ubuntu/output.log 2>&1" \
+            --region us-west-1
