@@ -1,5 +1,11 @@
-# DO NOT RENAME OR MOVE THIS FILE. 
-# Must update GitHub action workflow and documentation in README if you do.
+
+"""
+DO NOT RENAME OR MOVE THIS FILE. 
+Must update GitHub action workflow and documentation in README if you do.
+
+The key variable below st.session_state['chat'], or simply chat, which is list of dictionaries with keys 'role' and 'content'. 
+First item is system role, then 2N pairs of question and answers.
+"""
 
 import streamlit as st
 import requests
@@ -8,135 +14,127 @@ import json
 TEXT_INPUT_KEY = "user_input"
 
 # Function to send requests to your GPT model
-def query_mygpt(chat):
+def send_message(question):
     """
-    Call lambda function with the provided chat. This chat will have system role as a first item, 
-    then questions and answers in pairs.
+    Tries to send a chat to lambda f-on (where question is added to a chat first). 
+    If error occurs, reverts back to the old chat history and leave the question in the text input.
 
     Args:
-        chat (list(dict)): List of dictionaries with keys 'role' and 'content'. 
-            Length is 2N where N is the number of questions asked (1 for system role, and 1 for a question)
-
-    Returns:
-        list(dict): new chat that includes the response from the GPT model. Length is 2N + 1 (role + N Q&A pairs)
+        question (str): user's question
     """
-
-    lambda_url = "https://5faukxw75uazcs2zdl4zbvyg2e0lebie.lambda-url.us-west-1.on.aws/"
-    # print("Please wait while GPT is done ...")
-    headers = {'Content-Type': 'application/json'}
-
-    r = requests.post(headers=headers, url=lambda_url, json=json.dumps(chat))
+    
+    old_chat = st.session_state['chat']
+    
     try:
+        lambda_url = "https://5faukxw75uazcs2zdl4zbvyg2e0lebie.lambda-url.us-west-1.on.aws/"
+        headers = {'Content-Type': 'application/json'}
+        possible_new_chat = old_chat.copy()
+        possible_new_chat.append({'role': 'user', 'content': question})
+        # # for testing only, throwing an error on the second trial
+        # if st.session_state['number_of_trials'] == 2:
+        #     raise Exception("This is a test error")
+        
+        r = requests.post(headers=headers, url=lambda_url, json=json.dumps(possible_new_chat))
         new_chat = json.loads(r.content.decode('utf-8'))
+            
+        # catches some weird error in case last response was not from the assistant or system
         if new_chat[-1]['role'] in ['assistant', 'system']:
             st.session_state['number_of_trials'] -= 1
             st.session_state['error'] = None
         else:
             raise Exception("The last message was not from the assistant or system.")
-        return False, new_chat
+        
+        # stores new chat, removes the old input
+        st.session_state['chat'] = new_chat
+        st.session_state[TEXT_INPUT_KEY] = ''
+        
     except Exception as e:
         st.session_state['error'] = e
-        return True, chat
+        # will have to show the same chat old again and will leave old input as is
+        st.session_state['chat'] = old_chat
 
 
-# Function to handle sending the message
-def send_message(question):
+def show_previous_q_and_a():
+    """
+    Show all previous Q&A
+    """
+    # filter out all system roles
     
-    st.session_state['input_text'] = question
+    temp_chat = st.session_state['chat'].copy()
+    temp_chat = [x for x in temp_chat if x['role'] in ['user', 'assistant']]
     
-    possible_new_chat = st.session_state['chat'].copy()
-    possible_new_chat.append({'role': 'user', 'content': question})
-    error, new_chat = query_mygpt(possible_new_chat)
-    
-    st.session_state['chat'] = new_chat
-    
-    if not error:
-        st.session_state[TEXT_INPUT_KEY] = ''
-        st.session_state['input_text'] = ''
-    else:
-        # will have to show the same question again
-        st.session_state[TEXT_INPUT_KEY] = question
-        st.session_state['input_text'] = question
-    
-
-def show_previous_q_and_a(chat_history):
-    # show all previous Q&A
-    for i in range(1, len(chat_history), 2):
-        # writes previous question
-        question = chat_history[i]['content']
-        a1 = st.write(question)
-        # writes previous answer
-        answer = chat_history[i+1]['content']
-        a2 = st.markdown(f'<div style="color: gray;">{answer}</div>', unsafe_allow_html=True) 
+    for i in range(0, len(temp_chat), 2):
+        question = temp_chat[i]['content']
+        answer = temp_chat[i+1]['content']
+        
+        st.write(question)
+        st.markdown(f'<div style="color: gray;">{answer}</div>', unsafe_allow_html=True) 
         st.text("\n" * 10)
         
         
 def show_input_prompt_and_send_button():
-    # show a new inout prompt and a send button, as well as error if it was there previously
+    """
+    Show a new input prompt and a send button.
+    """
 
     if st.session_state['number_of_trials'] > 0:
-        # Using columns to organize the layout
         col1, col2 = st.columns([4, 1])
-
         with col1:
             user_input = st.text_input(
-                label="user input", 
-                value=st.session_state['input_text'], 
+                label="user input",
                 key=TEXT_INPUT_KEY, 
-                placeholder="Enter a question", 
+                placeholder="Ask why did the chicken cross the road or anything else ...", 
                 label_visibility="collapsed"
                 )
-            
-        # Send button in the second column
         with col2:
-            send_button = st.button("Send", on_click=send_message, args=(user_input,))
+            st.button("Send", on_click=send_message, args=(user_input,))
         
     else:
         st.info(f"This demo allows only 3 API calls. Thanks for trying it out. No chats are stored.")
 
+
+def assign_role():
+    st.session_state['chat'].append({'role': 'system', 'content': f"You are now a {st.session_state['assistant_choice']} and no one else, do not give any other response other than role assigned to you."})
+
+
+def assign_question():
+    st.session_state[TEXT_INPUT_KEY] = st.session_state['question_choice']
+
+
+if __name__ == "__main__":
+
+    st.title("MyGPT Demo")
+
+    st.info("""
+            Welcome to MyGPT, a simple OpenAI ChatGPT-3 based chatbot (for time being). Please note:
+            - no chats are stored,
+            - responses are limited to about 300 words and 3 API calls per session,  
+            - please allow up to 10 seconds for response. 
+    """)
+    
+    # Define the options for the radio button
+    options_for_assistant = ['Helpful assistant', 'Software Engineer', 'Philosopher', 'Comedian']
+    
+    # Create the radio button with the options
+    assistant_choice = st.radio("Choose an option:", options_for_assistant, on_change=assign_role, key="assistant_choice")
+    
+    # Define the options for the radio button
+    options_for_question = ['', 'Why did the chicken cross the road?', 'Write A* algorithm', 'What is the meaning of life?']
+    
+    question_choice = st.radio("Choose an option:", options_for_question, on_change=assign_question, key="question_choice")
+    
+    if 'first time' not in st.session_state:
+        st.session_state['number_of_trials'] = 3
+        st.session_state['input_text'] = ''
+        st.session_state['error'] = None
+        st.session_state['chat'] = []
+        assign_role()
+        st.session_state['first time'] = False
         
-# def show_with_background_color(some_text):
-#     """
-#     Not used anymore. The ideas was to have custom background color,
-#     but it is easier to just have chatbot reply in gray color,
-#     that way it works on both dark and light mode. 
-#     """
+    # "debug", st.session_state['chat']
+    # "error", st.session_state['error']
 
-#     st.markdown("""
-#         <style>
-#         .content {
-#             background-color: #f0f0f0;  /* Light gray background */
-#             padding: 10px;             /* Padding around the text */
-#         }
-#         </style>
-#         """, unsafe_allow_html=True)
-#     # Display the content with custom style
-#     st.markdown(f'<div class="content">{some_text}</div>', unsafe_allow_html=True)
-
-
-if 'first time' not in st.session_state:
-    st.session_state['number_of_trials'] = 3
-    st.session_state['first time'] = False
-    st.session_state['input_text'] = ''
-    st.session_state['error'] = None
-    st.session_state['chat'] = [
-    {'role': 'system', 'content': 'You are a software engineer'}
-    ]
-# Streamlit app layout
-st.title("MyGPT Demo")
-
-st.info(f"Welcome to MyGPT, a simple OpenAI ChatGPT-3 based chatbot (for now).\nNo chats are stored. Responses are limited to about 300 words. ")
-
-# "debug", st.session_state['chat']
-# "error", st.session_state['error']
-
-# show all previous Q&A 
-show_previous_q_and_a(st.session_state['chat'])
-
-# show an input prompt and a send button
-show_input_prompt_and_send_button()
-    
-if st.session_state['error'] is not None:
-    # show an extra field saying it failed so the user should retry
-    st.error(f"Try again, there was some issue with API (it happens sometimes)")  
-    
+    show_previous_q_and_a()  
+    show_input_prompt_and_send_button()
+    if st.session_state['error'] is not None:
+        st.error(f"Try again, there was some issue with API (it happens sometimes)")  
