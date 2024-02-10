@@ -25,5 +25,10 @@ jobs:
         aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --targets "Key=instanceids,Values=i-08b8b6691ed2e1b6d" \
-            --parameters commands="date > /home/ubuntu/output.log && sudo -u ubuntu git -C /home/ubuntu/chatbot pull >> /home/ubuntu/output.log 2>&1 && sudo pkill -f streamlit >> /home/ubuntu/output.log 2>&1 && nohup /home/ubuntu/miniconda/bin/streamlit run /home/ubuntu/chatbot/myGPT.py --server.enableCORS false --server.enableXsrfProtection false >> /home/ubuntu/output.log 2>&1" \
+            --parameters commands="date > /home/ubuntu/output.log && \
+            sudo -u ubuntu git -C /home/ubuntu/chatbot pull >> /home/ubuntu/output.log 2>&1 && \
+            sudo -u ubuntu git -C /home/ubuntu/chatbot status >> /home/ubuntu/output.log 2>&1 && \
+            sudo pkill -f streamlit >> /home/ubuntu/output.log 2>&1 && \
+            nohup /home/ubuntu/miniconda/bin/streamlit run /home/ubuntu/chatbot/myGPT.py \
+            --server.enableCORS false --server.enableXsrfProtection false >> /home/ubuntu/output.log 2>&1" \
             --region us-west-1
