@@ -117,7 +117,7 @@ def assign_question():
 
 if __name__ == "__main__":
 
-    st.title("MyGPT Demo")
+    st.title("MyGPT Demo v1.0")
 
     st.info("""
             Welcome to MyGPT, a simple OpenAI ChatGPT-3 based chatbot (for time being). Please note:
