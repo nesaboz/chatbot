@@ -12,6 +12,9 @@ import requests
 import json
 
 TEXT_INPUT_KEY = "user_input"
+MAX_TRIALS = 3
+options_for_assistant = ['Helpful Assistant', 'Software Engineer', 'Philosopher']
+
 
 # Function to send requests to your GPT model
 def send_message(question):
@@ -31,7 +34,7 @@ def send_message(question):
         possible_new_chat = old_chat.copy()
         possible_new_chat.append({'role': 'user', 'content': question})
         # # for testing only, throwing an error on the second trial
-        # if st.session_state['number_of_trials'] == 2:
+        # if st.session_state['number_of_trials'] == MAX_TRIALS - 1:
         #     raise Exception("This is a test error")
         
         r = requests.post(headers=headers, url=lambda_url, json=json.dumps(possible_new_chat))
@@ -83,18 +86,29 @@ def show_input_prompt_and_send_button():
             user_input = st.text_input(
                 label="user input",
                 key=TEXT_INPUT_KEY, 
-                placeholder="Ask why did the chicken cross the road or anything else ...", 
+                placeholder="Ask a question", 
                 label_visibility="collapsed"
                 )
         with col2:
             st.button("Send", on_click=send_message, args=(user_input,))
+            
+            
+        col1, col2, col3 = st.columns([1, 1, 1]) 
+        with col1:
+            assistant_choice = st.radio("Optional assistant focus:", options_for_assistant, on_change=assign_role, key="assistant_choice")
         
+        with col2:
+            options_for_question = ['Write Dijkstra algorithm in Python', 'Why did the chicken cross the road?', ]
+            st.radio("Examples ...", options_for_question, on_change=assign_question, key="question_choice", index=None)
+            
     else:
         st.info(f"This demo allows only 3 API calls. Thanks for trying it out. No chats are stored.")
 
 
-def assign_role():
-    st.session_state['chat'].append({'role': 'system', 'content': f"You are now a {st.session_state['assistant_choice']} and no one else, do not give any other response other than role assigned to you."})
+def assign_role(value=None):
+    if value is None:
+        value = st.session_state['assistant_choice']
+    st.session_state['chat'].append({'role': 'system', 'content': f"You are now a {value} and no one else. If you are asked what is your role you should reply it is the one assigned here."})
 
 
 def assign_question():
@@ -108,27 +122,16 @@ if __name__ == "__main__":
     st.info("""
             Welcome to MyGPT, a simple OpenAI ChatGPT-3 based chatbot (for time being). Please note:
             - no chats are stored,
-            - responses are limited to about 300 words and 3 API calls per session,  
+            - responses are limited to about 500 words and 3 API calls per session,  
             - please allow up to 10 seconds for response. 
     """)
-    
-    # Define the options for the radio button
-    options_for_assistant = ['Helpful assistant', 'Software Engineer', 'Philosopher', 'Comedian']
-    
-    # Create the radio button with the options
-    assistant_choice = st.radio("Choose an option:", options_for_assistant, on_change=assign_role, key="assistant_choice")
-    
-    # Define the options for the radio button
-    options_for_question = ['', 'Why did the chicken cross the road?', 'Write A* algorithm', 'What is the meaning of life?']
-    
-    question_choice = st.radio("Choose an option:", options_for_question, on_change=assign_question, key="question_choice")
-    
+
     if 'first time' not in st.session_state:
-        st.session_state['number_of_trials'] = 3
+        st.session_state['number_of_trials'] = MAX_TRIALS
         st.session_state['input_text'] = ''
         st.session_state['error'] = None
         st.session_state['chat'] = []
-        assign_role()
+        assign_role('Helpful Assistant')
         st.session_state['first time'] = False
         
     # "debug", st.session_state['chat']
@@ -136,5 +139,6 @@ if __name__ == "__main__":
 
     show_previous_q_and_a()  
     show_input_prompt_and_send_button()
+    
     if st.session_state['error'] is not None:
-        st.error(f"Try again, there was some issue with API (it happens sometimes)")  
+        st.error(f"API issue encountered on OpenAI side, try again ...")  
