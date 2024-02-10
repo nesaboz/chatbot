@@ -17,15 +17,12 @@ options_for_assistant = ['Helpful Assistant', 'Software Engineer', 'Philosopher'
 
 
 # Function to send requests to your GPT model
-def send_message(question):
+def send_message():
     """
     Tries to send a chat to lambda f-on (where question is added to a chat first). 
     If error occurs, reverts back to the old chat history and leave the question in the text input.
-
-    Args:
-        question (str): user's question
     """
-    
+    question = st.session_state[TEXT_INPUT_KEY]
     old_chat = st.session_state['chat']
     
     try:
@@ -83,22 +80,21 @@ def show_input_prompt_and_send_button():
     if st.session_state['number_of_trials'] > 0:
         col1, col2 = st.columns([4, 1])
         with col1:
-            user_input = st.text_input(
+            st.text_input(
                 label="user input",
                 key=TEXT_INPUT_KEY, 
                 placeholder="Ask a question", 
                 label_visibility="collapsed"
                 )
         with col2:
-            st.button("Send", on_click=send_message, args=(user_input,))
+            st.button("Send", on_click=send_message)
             
-            
-        col1, col2, col3 = st.columns([1, 1, 1]) 
+        col1, col2, col3 = st.columns([2, 2, 1]) 
         with col1:
             assistant_choice = st.radio("Optional assistant focus:", options_for_assistant, on_change=assign_role, key="assistant_choice")
         
         with col2:
-            options_for_question = ['Write Dijkstra algorithm in Python', 'Why did the chicken cross the road?', ]
+            options_for_question = ['Write "Hello World" in Python', 'Why did the chicken cross the road?', ]
             st.radio("Examples ...", options_for_question, on_change=assign_question, key="question_choice", index=None)
             
     else:
@@ -108,7 +104,7 @@ def show_input_prompt_and_send_button():
 def assign_role(value=None):
     if value is None:
         value = st.session_state['assistant_choice']
-    st.session_state['chat'].append({'role': 'system', 'content': f"You are now a {value} and no one else. If you are asked what is your role you should reply it is the one assigned here."})
+    st.session_state['chat'].append({'role': 'system', 'content': f"You are now a {value}."})
 
 
 def assign_question():
@@ -120,7 +116,7 @@ if __name__ == "__main__":
     st.title("MyGPT Demo v1.0")
 
     st.info("""
-            Welcome to MyGPT, a simple OpenAI ChatGPT-3 based chatbot (for time being). Please note:
+            Welcome to MyGPT, a simple demo of OpenAI ChatGPT-3 based chatbot. Please note:
             - no chats are stored,
             - responses are limited to about 500 words and 3 API calls per session,  
             - please allow up to 10 seconds for response. 
