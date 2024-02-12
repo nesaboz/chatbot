@@ -2,8 +2,6 @@
 
 This is a small chatbot demo using OpenAIs ChatGPT3 API.
 
-![MyChatGPT](myGPT_thumbnail.jpg)
-
 ## Demo
 ![demo](demo_2x.mov)
 
