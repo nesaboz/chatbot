@@ -6,7 +6,7 @@ Try it yourself at <a href="https://nesaboz-chatbot-mygpt-cfgwpf.streamlit.app" 
 
 # Demo 
 
-[demo](demo_2x.m4v)
+![demo](demo_2x.m4v)
 
 # Notable technical points
 
