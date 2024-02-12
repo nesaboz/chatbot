@@ -47,6 +47,7 @@ def send_message():
         # stores new chat, removes the old input
         st.session_state['chat'] = new_chat
         st.session_state[TEXT_INPUT_KEY] = ''
+        st.session_state['question_choice'] = None 
         
     except Exception as e:
         st.session_state['error'] = e
@@ -94,11 +95,11 @@ def show_input_prompt_and_send_button():
             assistant_choice = st.radio("Optional assistant focus:", options_for_assistant, on_change=assign_role, key="assistant_choice")
         
         with col2:
-            options_for_question = ['Write "Hello World" in Python', 'Why did the chicken cross the road?', ]
+            options_for_question = ['Write "Hello World" in Python', 'Write depth first search algorithm in Python', 'Why did the chicken cross the road?', ]
             st.radio("Examples ...", options_for_question, on_change=assign_question, key="question_choice", index=None)
             
     else:
-        st.info(f"This demo allows only 3 API calls. Thanks for trying it out. No chats are stored.")
+        st.info(f"This demo allows only {MAX_TRIALS} API calls. Thanks for trying it out. No chats are stored.")
 
 
 def assign_role(value=None):
@@ -113,12 +114,12 @@ def assign_question():
 
 if __name__ == "__main__":
 
-    st.title("MyGPT Demo v1.0")
+    st.title("MyGPT Demo v1.1")
 
-    st.info("""
+    st.info(f"""
             Welcome to MyGPT, a simple demo of OpenAI ChatGPT-3 based chatbot. Please note:
             - no chats are stored,
-            - responses are limited to about 500 words and 3 API calls per session,  
+            - responses are limited to about 500 words and {MAX_TRIALS} API calls per session,  
             - please allow up to 10 seconds for response. 
     """)
 
