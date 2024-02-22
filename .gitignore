@@ -1,3 +1,5 @@
 .history
 MyGPT.pem
 githubactions_accessKeys.csv
+*.rdp
+.DS_Store

@@ -1,6 +1,6 @@
 # Chatbot
 
-A simple chatbot was developed based on OpenAI's GPT3 model. APIs were called by AWS Lambda, supporting both `requests` and `boto3` library calls. Web app was writen in Streamlit and hosted on custom EC2 instance. CI/CD was done using GitHub Actions. Repo details at [GitHub link](https://github.com/nesaboz/chatbot/).
+A simple chatbot was developed based on OpenAI's GPT-4 model (specifically `gpt-4-1106-preview`). APIs were called by AWS Lambda, supporting both `requests` and `boto3` library calls. Web app was written in Streamlit and hosted on custom EC2 instance. CI/CD was done using GitHub Actions. Repo details at [GitHub link](https://github.com/nesaboz/chatbot/).
 
 Try it yourself at <a href="https://nesaboz-chatbot-mygpt-cfgwpf.streamlit.app" target="_blank">MyGPT</a>.
 
@@ -18,7 +18,7 @@ Try it yourself at <a href="https://nesaboz-chatbot-mygpt-cfgwpf.streamlit.app" 
 chat = [{"role": "system", "content": 'You are software engineer'}]
 ```
 
-3. To get a reply from the assistant, we use `client.chat.completions.create` method. The model is `gpt-3`:
+3. To get a reply from the assistant, we use `client.chat.completions.create` method. The model is `gpt-4-1106-preview`:
 
 ```python
 def question(chat_history, some_question, client=client):
@@ -30,7 +30,7 @@ def question(chat_history, some_question, client=client):
         """
         chat_history.append({"role": "user", "content": some_question})
         reply = client.chat.completions.create(
-                model="gpt-3",
+                model="gpt-4-1106-preview",
                 messages=chat
                 )
         reply_message = reply.choices[0].message
@@ -65,7 +65,7 @@ def lambda_handler(event, context):
     chat_history = event
         
     reply = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4-1106-preview",
         messages=chat_history,
         max_tokens=500
         )
